@@ -1,14 +1,7 @@
-import { useSpring, a, SpringValue } from "@react-spring/web";
 import { useState } from "react";
-import React from "react";
 import "./game.css";
 import { Card } from "../../types/card";
 import CardComponent from "../../components/card";
-
-interface FlippedAnimationResult {
-    transform: SpringValue<string>;
-    opacity: SpringValue<number>;
-  }
 
 let cardss: Card[] = [
     {
@@ -55,7 +48,9 @@ export default function Game() {
     return (
         <div>
             <div className="question">
-                Who is the gamer?
+            <button className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                Button
+            </button>
             </div>
             <div className="cards">
                 {
