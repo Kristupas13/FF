@@ -1,0 +1,115 @@
+namespace Playground
+{
+    internal interface IRule<TModel, TState>
+    {
+        void SetTarget(Func<TState> targetFunc);
+        void Validate(Func<TModel> model);
+    }
+
+    class Product
+    {
+        public string No { get; init; }
+        public string Name { get; init; }
+        public string Type { get; init; }
+        public string Description { get; init; }
+        public bool Activated { get; init; }
+    }
+
+    internal class ValidationResult
+    {
+        public bool IsValid => Errors == Errors.None;
+        public Errors Errors { get; set; }
+        public override string ToString()
+        {
+            return $"Valid: {IsValid}. Errors: {Errors}";
+        }
+    }
+
+    class Validator
+    {
+        public Validator()
+        {
+            var target = new Product();
+            var rootRule = new ProductRules();
+            var result = new ValidationResult();
+
+            rootRule.SetTarget(() => result);
+            rootRule.Validate(() => new Product());
+
+            Console.WriteLine(result);
+        }
+    }
+
+    internal class ProductRules : IRule<Product, ValidationResult>
+    {
+        private ValidationResult? _target;
+        private static readonly List<IRule<Product, ValidationResult>> _rules =
+        [
+            new ProductFoundRule(),
+            new ProductActivatedRule()
+        ];
+
+        public void SetTarget(Func<ValidationResult> targetFunc)
+        {
+            _target = targetFunc();
+        }
+
+        public void Validate(Func<Product> model)
+        {
+            if (_target == null)
+            {
+                throw new Exception("Target not set");
+            }
+
+            var modelResult = model();
+            _rules.ForEach(r => r.SetTarget(() => _target));
+            _rules.ForEach(r => r.Validate(() => modelResult));
+        }
+    }
+
+    internal class ProductFoundRule : IRule<Product, ValidationResult>
+    {
+        private ValidationResult? _target;
+
+        public void SetTarget(Func<ValidationResult> targetFunc)
+        {
+            _target = targetFunc();
+        }
+
+        public void Validate(Func<Product> model)
+        {
+            if (_target == null)
+            {
+                throw new Exception("Target not set");
+            }
+
+            if (model() == null)
+            {
+                _target.Errors |= Errors.ProductNotFound;
+            }
+        }
+    }
+
+    internal class ProductActivatedRule : IRule<Product, ValidationResult>
+    {
+        private ValidationResult? _target;
+
+        public void SetTarget(Func<ValidationResult> targetFunc)
+        {
+            _target = targetFunc();
+        }
+
+        public void Validate(Func<Product> model)
+        {
+            if (_target == null)
+            {
+                throw new Exception("Target not set");
+            }
+
+            if (model().Activated == false)
+            {
+                _target.Errors |= Errors.ProductNotFound;
+            }
+        }
+    }
+}
